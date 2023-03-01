@@ -1,0 +1,59 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    height: 5vh;
+    box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+    background: #ffffff;
+}
+
+.username-text {
+    display: none;
+}
+
+.header-title {
+    cursor: pointer;
+}
+
+.explore-button {
+    color: #00a278 !important;
+}
+.search-desktop-container{
+  width:500px;
+}
+.link {
+    font-weight: 700;
+    text-decoration: none;
+    color: #45c09f;
+  }
+  
+  .link:focus {
+    color: #00a278;
+  }
+  
+  .link:active {
+    color: #45c09f;
+  }
+  
+  .link:visited {
+    color: #45c09f;
+  }
+
+  .link-register{
+      color:white !important;
+    text-decoration: none;
+  }
+  
+.sideOptions{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+@media screen and (min-width: 768px) {
+    .username-text {
+        display: block;
+    }
+}

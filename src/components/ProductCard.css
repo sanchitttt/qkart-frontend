@@ -1,0 +1,22 @@
+.card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.card-actions {
+    margin-bottom: 0.5rem;
+    margin-top:0.5rem;
+}
+
+.card-button {
+    text-transform: none;
+    font-weight: 600;
+    min-width:100% !important;
+}
+
+.cost{
+    font-weight: bolder !important;
+}
