@@ -1,5 +1,4 @@
 import Register from "./components/Register";
-import ipConfig from "./ipConfig.json";
 import Login from "./components/Login";
 import theme from "./theme"
 import React from "react";
@@ -10,7 +9,7 @@ import Checkout from "./components/Checkout"
 import Thanks from "./components/Thanks"
 
 export const config = {
-  endpoint: `https://qkart-backendst.herokuapp.com/api/v1`,
+  endpoint: `https://qkart-backend-sanchit.vercel.app/v1`,
 };
 
 
