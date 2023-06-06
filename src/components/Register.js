@@ -6,16 +6,17 @@ import React, { useState } from "react";
 import { config } from "../App";
 import Footer from "./Footer";
 import Header from "./Header";
-import {Link} from "react-router-dom";
-import {useHistory} from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import "./Register.css";
 
 const Register = () => {
-  let [username,setUsername] = useState('');
-  let [password,setPassword] = useState('');
+  let [username, setUsername] = useState('');
+  let [password, setPassword] = useState('');
   let [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
   let { enqueueSnackbar } = useSnackbar();
-  let [loading,setLoading]= useState(false);
+  let [loading, setLoading] = useState(false);
 
 
   let history = useHistory();
@@ -46,37 +47,38 @@ const Register = () => {
    */
   const register = async (formData) => {
     let dataBody = {
-      "username":username,
-      "password":password
+      "email": email,
+      "name": username,
+      "password": password
     }
     let validateDataBody = {
-      "username":username,
-      "password":password,
-      "confirmPassword":confirmPassword
+      "username": username,
+      "password": password,
+      "confirmPassword": confirmPassword
 
     }
     let result = validateInput(validateDataBody);
-    if(result===true){
-      setLoading(loading=true)
+    if (result === true) {
+      setLoading(loading = true)
       try {
-        let response = await axios.post(`${config.endpoint}/auth/register`,JSON.parse(JSON.stringify(dataBody)))
+        let response = await axios.post(`${config.endpoint}/auth/register`, JSON.parse(JSON.stringify(dataBody)))
         console.log(response);
-        if(response.status === 201){
-          setLoading((loading=false));
-          enqueueSnackbar( "Registered Successfully", {variant:"success"});
+        if (response.status === 201) {
+          setLoading((loading = false));
+          enqueueSnackbar("Registered Successfully", { variant: "success" });
           history.push('/login')
-          
+
         };
-    
+
       } catch (error) {
         console.log(error);
-        if(error.response.status>=400){
-          setLoading((loading=false));
-          enqueueSnackbar( error.response.data.message, {variant:"error"})
+        if (error.response.status >= 400) {
+          setLoading((loading = false));
+          enqueueSnackbar(error.response.data.message, { variant: "error" })
         }
-        else{
-          enqueueSnackbar( "Something went wrong. Check that the backend is running, reachable and returns valid JSON.", {variant:"error"})
-          setLoading((loading=false));
+        else {
+          enqueueSnackbar("Something went wrong. Check that the backend is running, reachable and returns valid JSON.", { variant: "error" })
+          setLoading((loading = false));
         }
       }
     }
@@ -100,27 +102,27 @@ const Register = () => {
    * -    Check that confirmPassword field has the same value as password field - Passwords do not match
    */
   const validateInput = (data) => {
-      if(data.username.length===0){
-        enqueueSnackbar( "Username is a required field", {variant:"warning"});
-        return false;
-      }
-      if(data.username.length<6){
-        enqueueSnackbar( "Username must be at least 6 characters", {variant:"warning"});
-        return false;
-      }
-      if(data.password.length===0){
-        enqueueSnackbar( "Password is a required field", {variant:"warning"});
-        return false;
-      }
-      if(data.password.length<5){
-        enqueueSnackbar( "Password must be at least 6 characters", {variant:"warning"});
-        return false;
-      }
-      if(data.confirmPassword !== password){
-        enqueueSnackbar( "Passwords do not match", {variant:"warning"});
-        return false;
-      }
-      return true;
+    if (data.username.length === 0) {
+      enqueueSnackbar("Username is a required field", { variant: "warning" });
+      return false;
+    }
+    if (data.username.length < 6) {
+      enqueueSnackbar("Username must be at least 6 characters", { variant: "warning" });
+      return false;
+    }
+    if (data.password.length === 0) {
+      enqueueSnackbar("Password is a required field", { variant: "warning" });
+      return false;
+    }
+    if (data.password.length < 5) {
+      enqueueSnackbar("Password must be at least 6 characters", { variant: "warning" });
+      return false;
+    }
+    if (data.confirmPassword !== password) {
+      enqueueSnackbar("Passwords do not match", { variant: "warning" });
+      return false;
+    }
+    return true;
 
   };
 
@@ -134,6 +136,10 @@ const Register = () => {
 
   const confirmPasswordHandler = (event) => {
     setConfirmPassword(event.target.value);
+  };
+
+  const emailChangeHandler = (event) => {
+    setEmail(event.target.value);
   }
 
   return (
@@ -152,15 +158,29 @@ const Register = () => {
             id="username"
             label="Username"
             variant="outlined"
-            title="Username"
+            title="Name"
             name="username"
-            placeholder="Enter Username"
+            placeholder="Enter name"
             fullWidth
             value={username}
             onChange={usernameChangeHandler}
             className="lower-margin"
             required
-            
+
+          />
+          <TextField
+            id="email"
+            label="Email"
+            variant="outlined"
+            title="Email"
+            name="email"
+            placeholder="Enter email"
+            fullWidth
+            value={email}
+            onChange={emailChangeHandler}
+            className="lower-margin"
+            required
+
           />
           <TextField
             id="password"
@@ -188,15 +208,15 @@ const Register = () => {
             className="lower-margin"
             required
           />
-          {!loading?<Button className="button" variant="contained" onClick={register}> 
-  Register Now
- </Button>:<LinearProgress className="loading-center" />}
-          
+          {!loading ? <Button className="button" variant="contained" onClick={register}>
+            Register Now
+          </Button> : <LinearProgress className="loading-center" />}
+
           <p className="secondary-action">
             Already have an account?{" "}
-             <Link to="/login" className="link">
+            <Link to="/login" className="link">
               Login here
-             </Link>
+            </Link>
           </p>
         </Stack>
       </Box>

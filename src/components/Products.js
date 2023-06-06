@@ -10,7 +10,7 @@ import ProductCard from "./ProductCard";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
 import Cart from "./Cart";
 import { generateCartItemsFrom } from "./Cart";
-import { useSnackbar} from "notistack";
+import { useSnackbar } from "notistack";
 
 const Products = () => {
   let [productsData, setProductsData] = useState([]);
@@ -36,8 +36,9 @@ const Products = () => {
     async function onLoadHandler() {
       let products = await fetchProducts();
       let cart = await getCart();
-      let result = await generateCartItemsFrom(cart, products);
-      setCartFullItems(result);
+      console.log(cart)
+      // let result = await generateCartItemsFrom(cart, products);
+      setCartFullItems(cart.cartItems);
     }
     onLoadHandler();
   }, []);
@@ -58,7 +59,7 @@ const Products = () => {
         setProductsData(response.data);
         return response.data;
       }
-    } catch (error) {}
+    } catch (error) { }
   }
   async function fetchApi(productName) {
     try {
@@ -86,11 +87,12 @@ const Products = () => {
           return response.data;
         }
       } catch (error) {
+        console.log(error);
         if (error.response.status === 400) {
           enqueueSnackbar(error.response.data.message, { variant: "error" });
         } else {
           enqueueSnackbar(
-            "Could not fetch cart details. Please check if the backend server is running , reachable and returns a valid JSON."
+            "Could not fetch cart details. Please check if the backend server is running , reachable and returns a valid JSON.", { autoHideDuration: 3000 }
           );
         }
       }
@@ -102,14 +104,54 @@ const Products = () => {
   //   let result = generateCartItemsFrom(cart, product);
   //   setCartFullItems(result);
   // }
-  const addToCart = async (items, id, updatedQty) => {
-    let obj = { productId: id, qty: updatedQty };
-    let response = await postCart(obj);
-    let result = await generateCartItemsFrom(response, productsData);
-    setCartFullItems(result);
+  const handleIncreaseAndDecreaseOfQuantity = async (index, type) => {
+    let currArr = structuredClone(cartFullItems);
+    if (type === 'increment') {
+      console.log(currArr[index])
+      currArr[index].quantity += 1;
+      setCartFullItems(currArr);
+      await axios.put(`${config.endpoint}/cart`, { productId: currArr[index].product._id, quantity: currArr[index].quantity }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+    }
+    else if (type === 'decrement') {
+      let currArr = structuredClone(cartFullItems);
+      if (currArr[index].quantity === 1) {
+        let newArr = [];
+        for (let i = 0; i < currArr.length; i++) {
+          if (index !== i) newArr.push(currArr[i])
+          setCartFullItems(newArr);
+        }
+        await axios.put(`${config.endpoint}/cart`, { productId: currArr[index].product._id, quantity: 0 }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+      }
+      else {
+        currArr[index].quantity -= 1;
+        setCartFullItems(currArr);
+        await axios.put(`${config.endpoint}/cart`, { productId: currArr[index].product._id, quantity: currArr[index].quantity }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+      }
+    }
+    else {
+      console.log("UNKNOWN TYPE!");
+    }
+
+    // let obj = { productId: id, qty: updatedQty };
+    // let response = await postCart(obj);
+    // console.log(response);
+    // let result = await generateCartItemsFrom(response, productsData);
+    // setCartFullItems(result);
   };
   const postCart = async (cardDetails) => {
-    if (localStorage.getItem("username") !== null) {
+    if (localStorage.getItem("email") !== null) {
       try {
         let token = localStorage.getItem("token");
         let response = await axios.post(
@@ -124,37 +166,54 @@ const Products = () => {
         if (response.status === 200) {
           return response.data;
         }
-      } catch (error) {}
+      } catch (error) { }
     } else {
       enqueueSnackbar("Login to add an item to the Cart", {
-        variant: "warning",
+        variant: "warning", autoHideDuration: 2000
       });
       return null;
     }
   };
   const isItemInCard = (cardDetails) => {
-    let x = false;
-    cartFullItems.map((item) => {
-      if (item["productId"] === cardDetails["productId"]) {
-        x = true;
+    for (let i = 0; i < cartFullItems.length; i++) {
+      if (cartFullItems[i].product._id === cardDetails.productId) {
+        return true;
       }
-    });
-    return x;
-  };
-  const addToCartHandler = async (cartDetails) => {
-    let result = isItemInCard(cartDetails);
-    if (result === true) {
-      enqueueSnackbar(
-        "Item already in cart. Use the cart sidebar to update quantity or remove item.",
-        { variant: "warning" }
-      );
-    } else {
-      let response = await postCart(cartDetails);
-      let result = await generateCartItemsFrom(response, productsData);
-      setCartFullItems(result);
     }
+    return false;
   };
 
+  const makeCartObject = (cardDetails) => {
+    for (let i = 0; i < productsData.length; i++) {
+      if (productsData[i]._id === cardDetails.productId) {
+        return {
+          product: productsData[i],
+          quantity: cardDetails.qty,
+          productId: cardDetails.productId,
+          _id: cardDetails.productId
+        }
+      }
+    }
+  }
+  const addToCartHandler = async (cartDetails) => {
+    let result = isItemInCard(cartDetails);
+    if (result) {
+      enqueueSnackbar(
+        "Item already in cart. Use the cart sidebar to update quantity or remove item.",
+        { variant: "warning", autoHideDuration: 2000 }
+      );
+    } else {
+      let cartObj = makeCartObject(cartDetails);
+      let currArr = structuredClone(cartFullItems);
+      currArr.push(cartObj);
+      setCartFullItems(currArr);
+      const payload = { productId: cartDetails.productId, quantity: cartDetails.qty };
+      await postCart(payload);
+      enqueueSnackbar(
+        "Item added to your cart", { variant: "success", autoHideDuration: 1500 }
+      );
+    }
+  };
   // Component Did Update Functions
   useEffect(() => {
     if (searchBar1Values !== "") {
@@ -233,7 +292,7 @@ const Products = () => {
         </Grid>
         {isUserLoggedIn && (
           <Grid item md={3} xs={12} className="grid-cart">
-            <Cart items={cartFullItems} handleQuantity={addToCart} />
+            <Cart items={cartFullItems} handleQuantity={handleIncreaseAndDecreaseOfQuantity} />
           </Grid>
         )}
       </Grid>

@@ -11,14 +11,14 @@ import "./Login.css";
 
 const Login = () => {
   const { enqueueSnackbar } = useSnackbar();
-  let [username,setUsername]= useState('');
-  let [password,setPassword]= useState('');
-  let [loading,setLoading]=useState(false);
+  let [email, setEmail] = useState('');
+  let [password, setPassword] = useState('');
+  let [loading, setLoading] = useState(false);
 
   let history = useHistory();
 
-  const usernameChangeHandler = (event) => {
-    setUsername(event.target.value);
+  const emailChangeHandler = (event) => {
+    setEmail(event.target.value);
   }
 
   const passwordChangeHandler = (event) => {
@@ -52,29 +52,29 @@ const Login = () => {
    *
    */
   const login = async (formData) => {
-    let body={
-      "username":username,
-      "password":password
+    let body = {
+      "email": email,
+      "password": password
     }
-    let result=validateInput(body);
-    if(result===true){
+    let result = validateInput(body);
+    if (result === true) {
       setLoading(true)
       try {
-        let response = await axios.post(`${config.endpoint}/auth/login`,JSON.parse(JSON.stringify(body)));
-        if(response.status===201){
-          console.log(response);
-          enqueueSnackbar("Logged in successfully",{variant:"success"});
+        let response = await axios.post(`${config.endpoint}/auth/login`, JSON.parse(JSON.stringify(body)));
+        console.log(response.data);
+        if (response.status === 200) {
+          enqueueSnackbar("Logged in successfully", { variant: "success" });
           setLoading(false);
           history.push("/");
-          persistLogin(response.data.token,response.data.username,response.data.balance);
+          persistLogin(response.data.tokens.access.token, response.data.user.name, response.data.user.walletMoney, response.data.user.email);
         }
       } catch (error) {
-         if(error.response.status===400 || error.response.status===401){
-          enqueueSnackbar(error.response.data.message,{variant:"warning"});
+        if (error.response.status === 400 || error.response.status === 401) {
+          enqueueSnackbar(error.response.data.message, { variant: "warning" });
           setLoading(false);
         }
-        else{
-          enqueueSnackbar("Something went wrong. Check that the backend is running, reachable and returns valid JSON.",{variant:"error"});
+        else {
+          enqueueSnackbar("Something went wrong. Check that the backend is running, reachable and returns valid JSON.", { variant: "error" });
           setLoading(false);
         }
       }
@@ -97,20 +97,16 @@ const Login = () => {
    * -    Check that password field is not an empty value - "Password is a required field"
    */
   const validateInput = (data) => {
-    if(data.username.length===0){
-      enqueueSnackbar( "Username is a required field", {variant:"warning"});
+    if (data.email.length === 0) {
+      enqueueSnackbar("Email is a required field", { variant: "warning" });
       return false;
     }
-    if(data.username.length<6){
-      enqueueSnackbar( "Username must be at least 6 characters", {variant:"warning"});
+    if (data.password.length === 0) {
+      enqueueSnackbar("Password is a required field", { variant: "warning" });
       return false;
     }
-    if(data.password.length===0){
-      enqueueSnackbar( "Password is a required field", {variant:"warning"});
-      return false;
-    }
-    if(data.password.length<5){
-      enqueueSnackbar( "Password must be at least 6 characters", {variant:"warning"});
+    if (data.password.length < 5) {
+      enqueueSnackbar("Password must be at least 6 characters", { variant: "warning" });
       return false;
     }
     return true;
@@ -132,10 +128,11 @@ const Login = () => {
    * -    `username` field in localStorage can be used to store the username that the user is logged in as
    * -    `balance` field in localStorage can be used to store the balance amount in the user's wallet
    */
-  const persistLogin = (token, username, balance) => {
-    localStorage.setItem("username",username);
-    localStorage.setItem("token",token);
-    localStorage.setItem("balance",balance);
+  const persistLogin = (token, username, balance, email) => {
+    localStorage.setItem("username", username);
+    localStorage.setItem("token", token);
+    localStorage.setItem("balance", balance);
+    localStorage.setItem("email", email);
     window.location.reload();
   };
 
@@ -146,18 +143,18 @@ const Login = () => {
       justifyContent="space-between"
       minHeight="100vh"
     >
-      <Header hasHiddenAuthButtons="login"/>
+      <Header hasHiddenAuthButtons="login" />
       <Box className="content">
         <Stack spacing={2} className="form">
           <h2 className="title">Login</h2 >
-          <TextField label="Username" value={username} onChange={usernameChangeHandler}/>
+          <TextField label="Email" value={email} onChange={emailChangeHandler} />
           <TextField label="Password" type="password" value={password} onChange={passwordChangeHandler} />
-          {loading===false?<Button variant="contained" onClick={login}>LOGIN TO QKART</Button>:<LinearProgress />}
+          {loading === false ? <Button variant="contained" onClick={login}>LOGIN TO QKART</Button> : <LinearProgress />}
           <p className="secondary-action">
             Don't have an account?{" "}
-             <Link to="/register" className="link">
+            <Link to="/register" className="link">
               Register now
-             </Link>
+            </Link>
           </p>
         </Stack>
       </Box>
